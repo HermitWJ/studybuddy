@@ -20,7 +20,7 @@ skills/
 
 | 技能 | 用途 | 详细文档 |
 | --- | --- | --- |
-| [team-git-commit](team-git-commit/SKILL.md) | 强制 `feat/<用户名>` 分支、提交前 rebase 最新 main、禁止推送 main | [团队协作规范](team-git-commit/references/team-branch-policy.md) |
+| [team-git-commit](team-git-commit/SKILL.md) | 引导式执行「开工 → 开发 → 提交」，边做边讲原理；强制 `feat/<用户名>`、rebase 最新 main、禁止推送 main | [用户使用说明书](team-git-commit/user-guide.html)（浏览器打开） · [团队规范](team-git-commit/references/team-branch-policy.md) · [Git 原理速查](team-git-commit/references/git-primer.md) · [初学者体验实录](team-git-commit/references/beginner-walkthrough.md) |
 
 ## 为什么有两份目录
 

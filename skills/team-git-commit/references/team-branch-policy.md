@@ -32,6 +32,17 @@ python skills/team-git-commit/scripts/team_submit.py branches
 
 工具不会在未确认的情况下建分支：分支不存在且没给 `--create` 时，`submit` 以退出码 `2` 退出，提示先和用户沟通。
 
+### 每天开工的固定动作
+
+开始写代码前，先做两件事，顺序不能反：
+
+1. **确认分支**：`python skills/team-git-commit/scripts/team_submit.py branches`，看清现有分支，与本人确认用哪个。
+2. **同步 main**：`python skills/team-git-commit/scripts/team_submit.py start`（新建分支加 `--create`）。它把当前分支 rebase 到最新 `origin/main`，打印「开工就绪」后才动手。
+
+原因：在落后的分支上开发，提交时必然要 rebase，冲突会集中爆发在你要交付的那一刻。开工时同步一次，冲突在代码量最少的时候解决，代价最小。
+
+如果 `start` 提示「分支上的提交已全部并入 main」，说明上次 PR 已合并、本地分支只是残留。此时不要继续往上加提交，用 `start --recreate` 从最新 main 重建（旧分支自动备份为 `backup/...`），否则旧提交会被重放到 main 上，产生重复历史和难以理解的冲突。
+
 ## 2. 提交前必做
 
 顺序固定，缺一不可：
