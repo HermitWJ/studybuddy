@@ -1,0 +1,41 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# 团队协作 pre-push 钩子（由 team-git-commit 技能的 install_hooks.py 安装）
+#
+# 规则：
+#   1) 绝对禁止向远程 main / master 推送（含通过删除引用的方式）；
+#   2) 远程分支名不是 feat/<用户名> 时给出警告。
+# ---------------------------------------------------------------------------
+
+status=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    case "$remote_ref" in
+        refs/heads/main | refs/heads/master)
+            echo "" >&2
+            echo "[team-git-commit] 已阻止：禁止推送到远程分支 ${remote_ref#refs/heads/}" >&2
+            echo "[team-git-commit] 所有改动必须提交到你自己的分支：feat/<用户名>，例如 feat/HermitWJ" >&2
+            echo "[team-git-commit] 正确做法：" >&2
+            echo "[team-git-commit]   git checkout -b feat/<用户名> origin/main" >&2
+            echo "[team-git-commit]   python skills/team-git-commit/scripts/team_submit.py submit -m \"说明\"" >&2
+            echo "[team-git-commit]   -> 然后在 GitHub 上发起 Pull Request 合入 main" >&2
+            echo "" >&2
+            status=1
+            ;;
+        refs/heads/*)
+            branch="${remote_ref#refs/heads/}"
+            case "$branch" in
+                feat/*) : ;;
+                *)
+                    echo "[team-git-commit] 警告：远程分支 '$branch' 不符合 feat/<用户名> 命名规范" >&2
+                    ;;
+            esac
+            ;;
+    esac
+done
+
+if [ "$status" -ne 0 ]; then
+    echo "[team-git-commit] 推送已中止。" >&2
+fi
+
+exit $status

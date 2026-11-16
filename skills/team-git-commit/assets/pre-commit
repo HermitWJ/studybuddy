@@ -1,0 +1,21 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# 可选的 pre-commit 钩子：在受保护分支上提交时给出强提示（不强制阻断）。
+# 需要阻断时把最后的 exit 0 改成 exit 1。
+# ---------------------------------------------------------------------------
+
+branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null)
+
+case "$branch" in
+    main | master)
+        echo "" >&2
+        echo "[team-git-commit] 你正在受保护分支 '$branch' 上提交。" >&2
+        echo "[team-git-commit] 该提交无法推送（推送 main 会被 pre-push 拦截）。" >&2
+        echo "[team-git-commit] 建议立刻迁移到个人分支：" >&2
+        echo "[team-git-commit]   git checkout -b feat/<用户名>" >&2
+        echo "[team-git-commit]   git rebase origin/main" >&2
+        echo "" >&2
+        ;;
+esac
+
+exit 0
