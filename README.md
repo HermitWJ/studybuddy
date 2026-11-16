@@ -20,6 +20,10 @@ studybuddy/
 │   │   ├── stores/          # Pinia
 │   │   └── views/           # 页面
 │   └── vite.config.js       # 含 /api 开发代理
+├── skills/                  # 团队 CodeBuddy 技能库（同步到 .codebuddy/skills/ 供 IDE 加载）
+│   ├── README.md            # 技能管理规范：新增 / 修改 / 评审
+│   ├── sync_skills.py       # 同步脚本：skills/ -> .codebuddy/skills/
+│   └── team-git-commit/     # Git 提交规范技能：feat/<用户名>、rebase 最新 main、拦截推 main
 └── README.md
 ```
 
