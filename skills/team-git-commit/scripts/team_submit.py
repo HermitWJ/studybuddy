@@ -159,7 +159,7 @@ def resolve_username(root: Path, explicit: str = "") -> str:
     name = sanitize_username(config_get(root, "user.name"))
     if name:
         emit("WARN", f"未配置团队用户名，回退使用 git user.name：{name}")
-        emit("WARN", "建议固定下来：python scripts/team_submit.py set-user <你的用户名>")
+        emit("WARN", "建议固定下来：python skills/team-git-commit/scripts/team_submit.py set-user <你的用户名>")
         return name
 
     raise GitError(
