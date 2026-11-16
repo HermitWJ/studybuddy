@@ -29,12 +29,15 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 PROTECTED_BRANCHES = ("main", "master")
 DEFAULT_PREFIX = "feat/"
 DEFAULT_UPSTREAM = "origin/main"
 REMOTE = "origin"
+SELF = "python skills/team-git-commit/scripts/team_submit.py"
 
 EXIT_OK = 0
 EXIT_FAIL = 1
@@ -159,7 +162,7 @@ def resolve_username(root: Path, explicit: str = "") -> str:
     name = sanitize_username(config_get(root, "user.name"))
     if name:
         emit("WARN", f"未配置团队用户名，回退使用 git user.name：{name}")
-        emit("WARN", "建议固定下来：python skills/team-git-commit/scripts/team_submit.py set-user <你的用户名>")
+        emit("WARN", f"建议固定下来：{SELF} set-user <你的用户名>")
         return name
 
     raise GitError(
@@ -200,6 +203,42 @@ def pr_link(root: Path, branch: str) -> str:
         f"https://github.com/{match.group('owner')}/{match.group('repo')}"
         f"/compare/main...{branch}?expand=1"
     )
+
+
+# --------------------------------------------------------------------------- #
+# 上下文与前置校验
+# --------------------------------------------------------------------------- #
+@dataclass
+class Ctx:
+    """一次命令执行所需的仓库上下文，避免各子命令重复解析配置。"""
+
+    root: Path
+    username: str
+    prefix: str
+    upstream: str
+    target: str
+    goal: str
+
+
+def build_ctx(args) -> Ctx:
+    root = repo_root()
+    username = resolve_username(root, getattr(args, "user", "") or "")
+    prefix = getattr(args, "branch_prefix", None) or config_get(root, "team.branchPrefix", DEFAULT_PREFIX)
+    upstream = getattr(args, "upstream", None) or config_get(root, "team.upstream", DEFAULT_UPSTREAM)
+    target = f"{prefix}{username}"
+    goal = getattr(args, "branch", None) or target
+    return Ctx(root, username, prefix, upstream, target, goal)
+
+
+def guard_state(ctx: Ctx) -> None:
+    """统一的前置状态检查：未完成的 rebase / merge 必须先收尾。"""
+    if state_in_progress(ctx.root, "rebase-merge") or state_in_progress(ctx.root, "rebase-apply"):
+        raise GitError(
+            "上一次 rebase 还没收尾（有冲突未解决）。\n"
+            "解决冲突后执行 git rebase --continue，或放弃执行 git rebase --abort，然后再继续。"
+        )
+    if state_in_progress(ctx.root, "MERGE_HEAD"):
+        raise GitError("上一次 merge 还没收尾。请先完成这次合并，或执行 git merge --abort 放弃。")
 
 
 # --------------------------------------------------------------------------- #
@@ -247,7 +286,7 @@ def ensure_branch(root: Path, goal: str, upstream: str, prefix: str, create: boo
             "新建分支会改变当前工作位置，必须先和用户确认，脚本不会自行创建。\n"
             f"  • 用户同意新建 {goal}：加 --create 重跑\n"
             "  • 用户想用别的已有分支：加 --branch <分支名>\n"
-            "  • 先列出可选分支给用户看：team_submit.py branches"
+            f"  • 先列出可选分支给用户看：{SELF} branches"
         )
 
     run_git(["checkout", "-b", goal, "--no-track", upstream], cwd=root)
@@ -298,6 +337,35 @@ def verify_base_on_main(root: Path, upstream: str) -> None:
         )
 
 
+def branch_fully_merged(root: Path, branch: str, upstream: str):
+    """判断分支上的改动是否已经进入 upstream（PR 是否已合并）。
+
+    覆盖两种合并方式：
+      1) rebase / merge 合并：提交还在，patch-id 不变，用 git cherry 判定；
+      2) squash 合并（GitHub 默认）：多个提交压成一个，patch-id 全变，
+         改用「分支改过的文件是否已与 upstream 完全一致」判定。
+    误判方向始终保守：宁可认为未合并（保留提交），也不误删工作成果。
+    返回 (是否全部已合并, 已合并数, 未合并数)。
+    """
+    out = git_text(["cherry", upstream, branch], cwd=root)
+    lines = [line for line in out.splitlines() if line.strip()]
+    total = len(lines)
+    done = sum(1 for line in lines if line.startswith("-"))
+
+    if total and done == total:
+        return True, done, 0
+
+    base = git_text(["merge-base", upstream, branch], cwd=root)
+    if base:
+        changed = git_text(["diff", "--name-only", base, branch], cwd=root)
+        if changed:
+            args = ["diff", "--quiet", branch, upstream, "--"] + changed.splitlines()
+            if run_git(args, cwd=root, check=False).returncode == 0:
+                return True, done, 0
+
+    return False, done, total - done
+
+
 def commit_worktree(root: Path, message: str) -> None:
     if not is_dirty(root):
         emit("OK", "工作区干净，无需新建提交")
@@ -335,7 +403,7 @@ def rebase_onto_upstream(root: Path, upstream: str) -> int:
     print("    1) 打开上面列出的文件，处理 <<<<<<< / ======= / >>>>>>> 标记")
     print("    2) git add <已解决的文件>")
     print("    3) git rebase --continue   （如需修改提交说明：git commit --no-edit 后继续）")
-    print("    4) 冲突全部解决后重跑：python scripts/team_submit.py submit -m \"...\"")
+    print(f"    4) 冲突全部解决后重跑：{SELF} submit -m \"...\"")
     print("    放弃本次 rebase：git rebase --abort")
     return EXIT_CONFLICT
 
@@ -429,11 +497,9 @@ def branch_rows(root: Path, upstream: str, target: str, prefix: str):
 def cmd_branches(args) -> int:
     global JSON_MODE
     JSON_MODE = bool(args.json)
-    root = repo_root()
-    username = resolve_username(root, args.user)
-    prefix = args.branch_prefix or config_get(root, "team.branchPrefix", DEFAULT_PREFIX)
-    upstream = args.upstream or config_get(root, "team.upstream", DEFAULT_UPSTREAM)
-    target = f"{prefix}{username}"
+    ctx = build_ctx(args)
+    root, upstream, target = ctx.root, ctx.upstream, ctx.target
+    prefix, username = ctx.prefix, ctx.username
 
     try:
         fetch_remote(root)
@@ -483,26 +549,21 @@ def cmd_branches(args) -> int:
         print()
 
     print("下一步：先把上面的清单给用户看，确认用哪个分支，再执行")
-    print(f"  • 用已有分支：  team_submit.py submit --branch <分支名> -m \"提交说明\"")
-    print(f"  • 新建 {target}：  team_submit.py submit --create -m \"提交说明\"")
+    print(f"  • 用已有分支：  {SELF} start --branch <分支名>")
+    print(f"  • 新建 {target}：  {SELF} start --create")
     return EXIT_OK
 
 
 def cmd_check(args) -> int:
-    root = repo_root()
+    ctx = build_ctx(args)
+    root, upstream, target = ctx.root, ctx.upstream, ctx.target
     emit("OK", f"仓库根目录：{root}")
 
     remote_url = git_text(["remote", "get-url", REMOTE], cwd=root)
     if not remote_url:
         raise GitError(f"未配置远程仓库 {REMOTE}。")
     emit("OK", f"远程 {REMOTE}：{remote_url}")
-
-    username = resolve_username(root, args.user)
-    prefix = args.branch_prefix or config_get(root, "team.branchPrefix", DEFAULT_PREFIX)
-    upstream_branch = args.upstream or config_get(root, "team.upstream", DEFAULT_UPSTREAM)
-    target = f"{prefix}{username}"
-    upstream = upstream_branch
-    emit("OK", f"团队用户名：{username}  ->  目标分支：{target}")
+    emit("OK", f"团队用户名：{ctx.username}  ->  目标分支：{target}")
 
     try:
         fetch_remote(root)
@@ -545,64 +606,103 @@ def cmd_check(args) -> int:
 
 
 def cmd_sync(args) -> int:
-    root = repo_root()
-    if state_in_progress(root, "rebase-merge") or state_in_progress(root, "rebase-apply"):
-        raise GitError("检测到未完成的 rebase，请先 git rebase --continue 或 git rebase --abort。")
+    ctx = build_ctx(args)
+    guard_state(ctx)
+    if is_dirty(ctx.root):
+        raise GitError("工作区有未提交改动，无法同步。请先提交或 git stash。")
+
+    fetch_remote(ctx.root)
+    ensure_branch(ctx.root, ctx.goal, ctx.upstream, ctx.prefix, create=getattr(args, "create", False))
+    return rebase_onto_upstream(ctx.root, ctx.upstream)
+
+
+def cmd_start(args) -> int:
+    """开工：确认分支、同步最新 main，然后才开始写代码。"""
+    ctx = build_ctx(args)
+    root, upstream, goal = ctx.root, ctx.upstream, ctx.goal
+    guard_state(ctx)
     if is_dirty(root):
-        raise GitError("工作区有未提交改动，无法 rebase。请先提交或 git stash。")
-
-    username = resolve_username(root, args.user)
-    prefix = args.branch_prefix or config_get(root, "team.branchPrefix", DEFAULT_PREFIX)
-    target = f"{prefix}{username}"
-    upstream = args.upstream or config_get(root, "team.upstream", DEFAULT_UPSTREAM)
-
-    goal = args.branch or target
-    fetch_remote(root)
-    ensure_branch(root, goal, upstream, prefix, create=getattr(args, "create", False))
-    return rebase_onto_upstream(root, upstream)
-
-
-def cmd_submit(args) -> int:
-    root = repo_root()
-
-    if state_in_progress(root, "rebase-merge") or state_in_progress(root, "rebase-apply"):
         raise GitError(
-            "检测到未完成的 rebase。请先解决冲突并 git rebase --continue，"
-            "或 git rebase --abort 放弃，然后再重跑 submit。"
-        )
-    if state_in_progress(root, "MERGE_HEAD"):
-        raise GitError("检测到未完成的 merge，请先完成提交或 git merge --abort。")
-
-    username = resolve_username(root, args.user)
-    prefix = args.branch_prefix or config_get(root, "team.branchPrefix", DEFAULT_PREFIX)
-    upstream = args.upstream or config_get(root, "team.upstream", DEFAULT_UPSTREAM)
-    target = f"{prefix}{username}"
-
-    goal = args.branch or target
-    if goal in PROTECTED_BRANCHES:
-        raise GitError(f"目标分支 {goal} 属于受保护分支，禁止直接提交。请使用 {target} 或 --branch 指定 feat 分支。")
-    if not valid_branch_name(goal, prefix):
-        raise GitError(
-            f"分支 {goal} 不符合团队规范 {prefix}<用户名>，例如 {target}。"
+            "工作区有未提交改动，无法同步基线。\n"
+            "请先用 git commit 或 git stash 把当前改动收好，再重新开工。"
         )
 
     print("=" * 62)
-    print(f" 团队用户名：{username}")
-    print(f" 目标分支：{goal}" + ("（新建）" if args.create else ""))
+    print(" 开工检查：确认分支 + 同步最新 main")
+    print(f" 目标分支：{goal}")
     print(f" 上游基线：{upstream}")
     print("=" * 62)
 
     fetch_remote(root)
-    branch = ensure_branch(root, goal, upstream, prefix, create=args.create)
-    verify_base_on_main(root, upstream)
-    commit_worktree(root, args.message)
+    branch = ensure_branch(root, goal, upstream, ctx.prefix, create=args.create)
+
+    ahead = int(git_text(["rev-list", "--count", f"{upstream}..{branch}"], cwd=root, default="0") or 0)
+    if ahead > 0:
+        all_merged, done, pending = branch_fully_merged(root, branch, upstream)
+        if all_merged:
+            emit("WARN", f"{branch} 上的 {ahead} 个提交都已并入 {upstream}（之前那次 PR 应该已合并）")
+            emit("WARN", "继续在这个分支上开发，旧提交会被重放到 main 上，应该从最新 main 重建")
+            if not args.recreate:
+                raise BranchDecisionRequired(
+                    "这个分支已经用过了，需要确认下一步：\n"
+                    f"  • 从最新 {upstream} 重建，旧分支自动备份：加 --recreate\n"
+                    f"  • 想保留当前分支：git checkout -b <新分支名> {upstream}，再用 --branch 指定"
+                )
+            backup = f"backup/{branch.replace('/', '-')}-{datetime.now():%Y%m%d-%H%M%S}"
+            run_git(["branch", backup, branch], cwd=root)
+            run_git(["checkout", "-B", branch, upstream], cwd=root)
+            emit("OK", f"已从 {upstream} 重建 {branch}，旧状态备份为 {backup}")
+        elif pending:
+            emit("INFO", f"分支上还有 {pending} 个提交未并入 {upstream}，会保留并 rebase 到最新")
 
     code = rebase_onto_upstream(root, upstream)
     if code != EXIT_OK:
         return code
 
-    # rebase 后再次确认基线（历史被重写）
+    print()
+    emit("OK", f"开工就绪：当前分支 {branch}，代码已基于最新 {upstream}")
+    print("[INFO] 现在可以开始写代码，改完后提交：")
+    print(f'       {SELF} submit -m "feat: 说明"')
+    return EXIT_OK
+
+
+def cmd_submit(args) -> int:
+    ctx = build_ctx(args)
+    root, upstream, goal, target = ctx.root, ctx.upstream, ctx.goal, ctx.target
+    guard_state(ctx)
+
+    if goal in PROTECTED_BRANCHES:
+        raise GitError(f"目标分支 {goal} 属于受保护分支，禁止直接提交。请使用 {target} 或 --branch 指定 feat 分支。")
+    if not valid_branch_name(goal, ctx.prefix):
+        raise GitError(f"分支 {goal} 不符合团队规范 {ctx.prefix}<用户名>，例如 {target}。")
+
+    print("=" * 62)
+    print(f" 团队用户名：{ctx.username}")
+    print(f" 目标分支：{goal}" + ("（新建）" if args.create else ""))
+    print(f" 上游基线：{upstream}")
+    print("=" * 62)
+
+    fetch_remote(root)
+    branch = ensure_branch(root, goal, upstream, ctx.prefix, create=args.create)
     verify_base_on_main(root, upstream)
+
+    ahead_before = int(git_text(["rev-list", "--count", f"{upstream}..{branch}"], cwd=root, default="0") or 0)
+    if ahead_before > 0:
+        all_merged, _, _ = branch_fully_merged(root, branch, upstream)
+        if all_merged:
+            emit("WARN", f"{branch} 上已有提交全部并入 {upstream}，本次提交可能与历史重复")
+            emit("WARN", "建议先执行 start --recreate 从最新 main 重建分支")
+
+    commit_worktree(root, args.message)
+
+    behind = git_text(["rev-list", "--count", f"HEAD..{upstream}"], cwd=root, default="0")
+    code = rebase_onto_upstream(root, upstream)
+    if code != EXIT_OK:
+        return code
+
+    # 只有真的重写了历史才需要复核基线，否则日志会重复
+    if behind != "0":
+        verify_base_on_main(root, upstream)
 
     output = push_branch(root, branch, args.dry_run, not args.no_force)
     if args.dry_run:
@@ -652,6 +752,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_branches.add_argument("--json", action="store_true", help="以 JSON 输出，便于程序解析")
     p_branches.set_defaults(func=cmd_branches)
+
+    p_start = sub.add_parser(
+        "start", parents=[common], help="开工：确认分支并同步最新 main，然后开始开发"
+    )
+    p_start.add_argument("--branch", help="指定要使用的分支（默认 feat/<用户名>）")
+    p_start.add_argument("--create", action="store_true", help="分支不存在时新建（须先与用户确认）")
+    p_start.add_argument("--recreate", action="store_true", help="分支已合并时从最新 main 重建，旧分支自动备份")
+    p_start.set_defaults(func=cmd_start)
 
     p_check = sub.add_parser("check", parents=[common], help="只读体检当前分支状态")
     p_check.set_defaults(func=cmd_check)

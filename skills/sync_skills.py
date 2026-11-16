@@ -15,7 +15,6 @@ skills/          唯一源码，随仓库提交、可评审
 from __future__ import annotations
 
 import argparse
-import filecmp
 import shutil
 import sys
 from pathlib import Path
@@ -52,6 +51,19 @@ def iter_files(base: Path):
         yield path, rel
 
 
+def normalized(path: Path) -> bytes:
+    """按行尾无关的方式读取内容。
+
+    仓库 .gitattributes 指定 eol=lf，签出后是 LF；而历史副本可能是 CRLF。
+    直接字节比较会把这种差异误判成「内容变更」，导致每次都提示不同步。
+    """
+    return path.read_bytes().replace(b"\r\n", b"\n")
+
+
+def same_content(a: Path, b: Path) -> bool:
+    return normalized(a) == normalized(b)
+
+
 def diff_skill(skill_dir: Path):
     added, changed, same = [], [], []
     target = DST / skill_dir.name
@@ -59,7 +71,7 @@ def diff_skill(skill_dir: Path):
         dst_file = target / rel
         if not dst_file.exists():
             added.append(rel)
-        elif filecmp.cmp(src_file, dst_file, shallow=False):
+        elif same_content(src_file, dst_file):
             same.append(rel)
         else:
             changed.append(rel)
