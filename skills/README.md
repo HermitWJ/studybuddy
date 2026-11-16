@@ -20,7 +20,10 @@ skills/
 
 | 技能 | 用途 | 详细文档 |
 | --- | --- | --- |
+| [spec-dev-sop](spec-dev-sop/SKILL.md) | 规范开发 SOP：需求澄清 → 开发方案 → 开发文档 → 编码 → 单测补全 → 质量体检，两道确认关卡，产物落 `docs/dev/<需求名>/`，文档按 `需求名.文档类型.md` 命名；自带 `sop.py`（scaffold / status / audit / test） | [用户使用说明书](spec-dev-sop/user-guide.html)（浏览器打开） · [需求澄清清单](spec-dev-sop/references/discovery-questions.md) · [单测手册](spec-dev-sop/references/testing-playbook.md) · [体检手册](spec-dev-sop/references/audit-playbook.md) |
 | [team-git-commit](team-git-commit/SKILL.md) | 引导式执行「开工 → 开发 → 提交」，边做边讲原理；强制 `feat/<用户名>`、rebase 最新 main、禁止推送 main | [用户使用说明书](team-git-commit/user-guide.html)（浏览器打开） · [团队规范](team-git-commit/references/team-branch-policy.md) · [Git 原理速查](team-git-commit/references/git-primer.md) · [初学者体验实录](team-git-commit/references/beginner-walkthrough.md) |
+
+两个技能配合使用：`spec-dev-sop` 管「写什么、写对没、写完体检」，`team-git-commit` 管「怎么提交上去」。体检结论为「可提交」后再进提交流程。
 
 ## 为什么有两份目录
 

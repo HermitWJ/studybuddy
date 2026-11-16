@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>规范开发使用说明 · StudyBuddy</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --ink-3: #6b7280;
+    --line: #e5e7eb;
+    --brand: #2563eb;
+    --brand-soft: #eff4ff;
+    --code-bg: #0f172a;
+    --code-ink: #e2e8f0;
+    --ok: #0f766e;
+    --warn: #b45309;
+    --danger: #b91c1c;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px -12px rgba(16,24,40,.12);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- 顶部 ---------- */
+  header {
+    background: linear-gradient(135deg, #0f2a5f 0%, #1d4ed8 55%, #3b82f6 100%);
+    color: #fff;
+    padding: 56px 32px 64px;
+  }
+  .head-inner { max-width: 1180px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.28);
+    padding: 5px 12px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  header h1 {
+    margin: 0 0 12px;
+    font-size: clamp(26px, 4vw, 40px);
+    line-height: 1.25;
+    letter-spacing: -.02em;
+  }
+  header p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255,255,255,.88);
+    font-size: 16px;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 26px; font-size: 13.5px; color: rgba(255,255,255,.78); }
+  .meta b { color: #fff; font-weight: 600; }
+
+  /* ---------- 布局 ---------- */
+  .layout {
+    max-width: 1180px;
+    margin: -32px auto 72px;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+  nav {
+    position: sticky;
+    top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 12px;
+    box-shadow: var(--shadow);
+  }
+  nav .nav-title {
+    font-size: 11.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 12px 10px;
+  }
+  nav a {
+    display: block;
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: var(--ink-2);
+    font-size: 14px;
+    border-left: 2px solid transparent;
+  }
+  nav a:hover { background: var(--brand-soft); color: var(--brand); text-decoration: none; }
+  nav a .num {
+    display: inline-block;
+    width: 22px;
+    color: var(--ink-3);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  main { display: grid; gap: 22px; }
+  section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 26px 28px;
+    box-shadow: var(--shadow);
+    scroll-margin-top: 20px;
+  }
+  section h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    letter-spacing: -.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .lead { margin: 0 0 18px; color: var(--ink-2); font-size: 14.8px; }
+  h3 { font-size: 15.5px; margin: 22px 0 8px; }
+  h3:first-of-type { margin-top: 6px; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .badge {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border: 1px solid #d6e4ff;
+  }
+
+  /* ---------- 代码 ---------- */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0 0 14px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  code {
+    background: #eef2f7;
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: .9em;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    color: #0f172a;
+  }
+  pre code { background: none; border: 0; padding: 0; color: inherit; }
+
+  /* ---------- 提示框 ---------- */
+  .tip {
+    border-radius: 10px;
+    padding: 14px 16px 14px 46px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    position: relative;
+    border: 1px solid;
+  }
+  .tip::before {
+    position: absolute;
+    left: 16px; top: 15px;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tip.info { background: #f0f6ff; border-color: #c9dcff; color: #1e3a8a; }
+  .tip.info::before { content: "i"; background: #2563eb; }
+  .tip.warn { background: #fffbeb; border-color: #fde68a; color: #78350f; }
+  .tip.warn::before { content: "!"; background: #d97706; }
+  .tip.danger { background: #fef2f2; border-color: #fecaca; color: #7f1d1d; }
+  .tip.danger::before { content: "×"; background: #dc2626; font-size: 13px; }
+  .tip p:last-child { margin-bottom: 0; }
+  .tip strong { font-weight: 700; }
+
+  /* ---------- 表格 ---------- */
+  .table-wrap { overflow-x: auto; margin: 0 0 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 520px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { background: #f8fafc; color: var(--ink-2); font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td code { white-space: nowrap; }
+  .pill {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    padding: 1px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill.ok { background: #ecfdf5; color: var(--ok); }
+  .pill.warn { background: #fffbeb; color: var(--warn); }
+  .pill.bad { background: #fef2f2; color: var(--danger); }
+  .pill.plain { background: #f1f5f9; color: var(--ink-2); }
+
+  /* ---------- 阶段条 ---------- */
+  .phase {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .phase:last-child { border-bottom: 0; padding-bottom: 0; }
+  .phase .no {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phase .body h4 { margin: 4px 0 6px; font-size: 15px; }
+  .phase .body p { margin: 0 0 6px; font-size: 14.5px; color: var(--ink-2); }
+  .phase .out { font-size: 13.5px; color: var(--ink-3); }
+  .phase .out b { color: var(--ink-2); font-weight: 600; }
+
+  /* ---------- 两栏对照 ---------- */
+  .paths { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 0 0 16px; }
+  .path {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    background: #fcfdff;
+  }
+  .path .ph { font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .path .ph span {
+    font-size: 11.5px; font-weight: 600; padding: 1px 8px;
+    border-radius: 999px; background: var(--brand-soft); color: var(--brand);
+  }
+  .path .ph span.plain { background: #f1f5f9; color: var(--ink-2); }
+  .path p { margin: 0 0 8px; font-size: 14.5px; color: var(--ink-2); }
+  .path pre { margin-bottom: 0; font-size: 12.5px; }
+
+  footer {
+    max-width: 1180px;
+    margin: 0 auto 56px;
+    padding: 0 32px;
+    color: var(--ink-3);
+    font-size: 13.5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; padding: 0 18px; margin-top: -24px; }
+    nav { position: static; display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; }
+    nav .nav-title { display: none; }
+    nav a { border-left: 0; border-radius: 999px; padding: 6px 13px; font-size: 13.5px; }
+    nav a .num { display: none; }
+    header { padding: 40px 18px 54px; }
+    .paths { grid-template-columns: 1fr; }
+    section { padding: 22px 18px; }
+    footer { padding: 0 18px; }
+  }
+  @media print {
+    body { background: #fff; }
+    nav { display: none; }
+    .layout { grid-template-columns: 1fr; margin-top: 0; }
+    section { box-shadow: none; border-color: #ddd; break-inside: avoid; }
+    header { background: #0f2a5f !important; -webkit-print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <div class="eyebrow">StudyBuddy · Dev SOP</div>
+    <h1>规范开发使用说明</h1>
+    <p>这套流程只为一件事服务：<strong>少返工</strong>。动手前把需求问清楚、把方案写下来，动手后自己先挑一遍毛病。你要做的决策只有几个，其余步骤助手会带着走。</p>
+    <div class="meta">
+      <span>适用对象：<b>团队全体成员</b></span>
+      <span>触发方式：<b>说一句「开始做 XX」</b></span>
+      <span>版本：<b>2026-11</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav id="toc">
+    <div class="nav-title">目录</div>
+    <a href="#why"><span class="num">01</span>为什么要有流程</a>
+    <a href="#phases"><span class="num">02</span>六个阶段</a>
+    <a href="#plan"><span class="num">03</span>前三阶段：出方案</a>
+    <a href="#code"><span class="num">04</span>写代码</a>
+    <a href="#test"><span class="num">05</span>补单测</a>
+    <a href="#audit"><span class="num">06</span>质量体检</a>
+    <a href="#files"><span class="num">07</span>文件放哪、怎么命名</a>
+    <a href="#usage"><span class="num">08</span>两种用法</a>
+    <a href="#faq"><span class="num">09</span>常见问题</a>
+    <a href="#ref"><span class="num">10</span>命令速查表</a>
+  </nav>
+
+  <main>
+
+    <!-- 01 -->
+    <section id="why">
+      <h2>为什么要有流程 <span class="badge">必读</span></h2>
+      <p class="lead">代码写错的代价，远小于「做错东西」和「改错地方」的代价。流程卡在动手之前，就是为了把这两类返工挡在成本最低的时候。</p>
+
+      <div class="paths">
+        <div class="path">
+          <div class="ph"><span class="plain">随便写</span>现在的常见情况</div>
+          <p>需求一句话就开工，写着发现理解错了；改完不知道影响了谁；提交前没人看过，上线才发现越权。</p>
+          <p><b>返工发生在最难改的时候。</b></p>
+        </div>
+        <div class="path">
+          <div class="ph"><span>走流程</span>这套 SOP</div>
+          <p>先问清六件事，写成方案给你确认；开发文档写明改哪些文件；写完补边界与安全用例；最后机器扫一遍。</p>
+          <p><b>返工发生在只改文档的时候。</b></p>
+        </div>
+      </div>
+
+      <div class="tip info">
+        <p>流程不是仪式感。<strong>一行改动</strong>（改文案、调颜色）、纯答疑、只读排查<strong>不需要走这套流程</strong>，直接做就行。</p>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="phases">
+      <h2>六个阶段</h2>
+      <p class="lead">每个阶段都有明确的产出文件，确认过的文件会标上「已确认」。没确认就写代码，属于跳关。</p>
+
+      <div class="phase">
+        <div class="no">0</div>
+        <div class="body">
+          <h4>判定现状</h4>
+          <p>先看这个需求处在哪一步，避免在方案阶段就动手写码。</p>
+          <div class="out">产出：一句话结论（新需求／方案待确认／可开发／已收尾）</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="no">1</div>
+        <div class="body">
+          <h4>需求澄清</h4>
+          <p>必问：谁用、验收标准、明确不做什么、涉及数据与权限吗、兼容压力、什么时候要。</p>
+          <div class="out">产出：对话记录 + 5 行以内的复述确认</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="no">2</div>
+        <div class="body">
+          <h4>开发方案</h4>
+          <p>验收标准写成表格，非目标必须非空，给备选方案和放弃理由。</p>
+          <div class="out">产出：<b>需求名.需求方案.md</b>　<b>门禁：你说「可以」才能进下一步</b></div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="no">3</div>
+        <div class="body">
+          <h4>开发文档</h4>
+          <p>方案回答「做什么」，这一步回答「落到哪些文件」：改动清单、时序、函数签名、错误处理、回滚方案。</p>
+          <div class="out">产出：<b>需求名.开发文档.md</b>　<b>门禁：确认后才允许写业务代码</b></div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="no">4</div>
+        <div class="body">
+          <h4>编码</h4>
+          <p>按改动清单施工。改到预期之外的文件要立刻停下来报告，不许顺手改。</p>
+          <div class="out">产出：代码 + 实际改动清单</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="no">5</div>
+        <div class="body">
+          <h4>单测补全</h4>
+          <p>九类用例逐条给结论：正常、边界、空值、异常、权限、并发、安全、一致性、兼容。</p>
+          <div class="out">产出：<b>需求名.测试记录.md</b> + 测试代码</div>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="no">6</div>
+        <div class="body">
+          <h4>质量体检</h4>
+          <p>机器扫四类问题，人工复核机器看不出的：重复造轮子、结构断裂、日志泄露、文档与代码不一致。</p>
+          <div class="out">产出：<b>需求名.质量体检.md</b>　<b>有 blocker 不许报「完成」</b></div>
+        </div>
+      </div>
+
+      <div class="tip warn">
+        <p><strong>门禁是软的。</strong>你明确说「别问了，先写」时，可以跳关，但必须在需求方案里留下记录：跳过哪道关卡、为什么、你的原话、风险是什么，事后仍然要补文档。<strong>不能拿「代码就是文档」结案。</strong></p>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="plan">
+      <h2>前三阶段：出方案</h2>
+      <p class="lead">你要做的只有两件事：答清楚问题，然后说「可以」或「不对，改成……」。</p>
+
+      <h3>会先建骨架</h3>
+      <pre><code>python skills/spec-dev-sop/scripts/sop.py scaffold user-login</code></pre>
+      <p>这会创建<code>docs/dev/user-login/</code>下的四份文档。需求名用英文小写加连字符，别用中文和空格。</p>
+
+      <h3>提问方式</h3>
+      <p>助手一次最多问 4 个问题，并且会把「我猜的默认值」写进选项里，你只需改不对的地方。答不上来时会给出建议并标注「按此假设推进，回头可改」。</p>
+
+      <h3>你要重点看的三处</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>看什么</th><th>为什么</th></tr></thead>
+          <tbody>
+            <tr><td>验收标准表</td><td>每行必须是「给什么输入 → 期望什么结果」，写不出表格说明需求没想清</td></tr>
+            <tr><td>非目标</td><td>写了「无」就是没想过范围，后面一定膨胀</td></tr>
+            <tr><td>关键取舍</td><td>只给一个方案、没有备选和放弃理由的，不算方案</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip info">
+        <p>确认时把状态行改成<code>状态：已确认</code>。要求修改就直接说，文档改动比代码改动便宜得多，这正是把门禁放在这里的原因。</p>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="code">
+      <h2>写代码</h2>
+      <p class="lead">这一阶段你基本不用管，但如果有下面这些情况，助手会主动打断你。</p>
+
+      <h3>施工顺序</h3>
+      <p>数据层 → 服务层 → 接口层 → 前端 → 接线。顺序错了容易出现「前端先写死假数据，最后来不及接」。</p>
+
+      <h3>会被拦下的行为</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>行为</th><th>原因</th></tr></thead>
+          <tbody>
+            <tr><td>改到设计之外的文件</td><td>影响面没评估，容易踩坏别人负责的部分</td></tr>
+            <tr><td>把数据库查询写进视图</td><td>分层破坏，后面没法复用和测试</td></tr>
+            <tr><td>吞异常（<code>except: pass</code>）</td><td>线上出问题没有任何线索</td></tr>
+            <tr><td>凭空引入新依赖</td><td>方案里没写就加，等于偷偷扩大范围</td></tr>
+            <tr><td>发现设计不可行却自己绕路</td><td>代码和文档对不上，下次没人敢改</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip warn">
+        <p>中途发现方案走不通，正确做法是<strong>停下来改开发文档并告诉你</strong>，不是在代码里私自换条路。文档骗人比代码有 bug 更麻烦。</p>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="test">
+      <h2>补单测</h2>
+      <p class="lead">编码完成后立即补，不攒到最后。九类用例必须逐条给出「已覆盖」或「不适用（理由）」，空着等于没做。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类别</th><th>必测内容</th></tr></thead>
+          <tbody>
+            <tr><td>正常路径</td><td>主流程返回值、状态码、落库结果</td></tr>
+            <tr><td>边界值</td><td>空串、0、负数、最大值、超长文本、分页首末页、恰好等于阈值</td></tr>
+            <tr><td>空值与类型</td><td><code>None</code>／<code>null</code>、缺字段、类型错误、空数组与单元素</td></tr>
+            <tr><td>异常路径</td><td>依赖不可用、超时、第三方报错、事务中途失败</td></tr>
+            <tr><td>权限</td><td>未登录、无权限角色、<b>越权访问他人资源（IDOR）</b>、token 过期</td></tr>
+            <tr><td>并发与幂等</td><td>重复提交、并发写同一资源、唯一约束冲突</td></tr>
+            <tr><td>安全</td><td>注入、XSS、路径穿越、上传类型与大小、敏感信息外泄</td></tr>
+            <tr><td>数据一致性</td><td>失败回滚、软删除可见性、级联操作</td></tr>
+            <tr><td>兼容</td><td>老字段缺失、老版本请求、接口向后兼容</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>写法底线</h3>
+      <ul>
+        <li>一个用例一个断言意图，命名说清场景，例如<code>test_非法状态值返回400并说明原因</code></li>
+        <li>断言具体值，不许只断言<code>status_code == 200</code></li>
+        <li>不许 mock 掉被测逻辑本身，只 mock 外部依赖</li>
+        <li>时间相关用可注入时钟，不写<code>sleep</code>等真时间</li>
+      </ul>
+
+      <div class="tip info">
+        <p>覆盖率是下限不是目标。100% 覆盖率照样可以漏掉越权。<strong>新增核心逻辑行覆盖率低于 80% 要写明理由。</strong></p>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="audit">
+      <h2>质量体检</h2>
+      <p class="lead">机器查可机械判定的，人查需要判断的。两者都做完才算体检结束。</p>
+
+      <h3>机器查四类</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类别</th><th>查什么</th></tr></thead>
+          <tbody>
+            <tr><td>敏感信息</td><td>硬编码口令与密钥、私钥、带密码的连接串、各类 token、身份证与手机号、硬编码 IP、<code>.env</code>是否被提交</td></tr>
+            <tr><td>冗余</td><td>被注释掉的死代码、跨文件重复代码块、未使用的 import、超过 60 行的函数、只有<code>pass</code>的空实现</td></tr>
+            <tr><td>结构完整性</td><td>import 与依赖清单是否一致、Django app 缺迁移或测试、<code>DEBUG=True</code>、文档命名是否合规</td></tr>
+            <tr><td>代码规范</td><td>超长行、行尾空白、缺尾换行、Tab 与空格混用、BOM</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>报告怎么读</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>级别</th><th>含义</th><th>怎么处理</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill bad">blocker</span></td><td>泄露、崩溃、语法错误级</td><td>必须修，修完重跑</td></tr>
+            <tr><td><span class="pill warn">warning</span></td><td>大概率的真问题</td><td>逐条判断，是真问题就修</td></tr>
+            <tr><td><span class="pill plain">info</span></td><td>提示与风格</td><td>扫一眼，本次不处理就记进遗留项</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>有 blocker 时命令返回 1；加<code>--strict</code>时 warning 也返回 1。</p>
+
+      <h3>人查五件事</h3>
+      <ol>
+        <li><b>业务语义冗余</b>：自己写了格式化函数，而项目里早有一个</li>
+        <li><b>抽象过度</b>：只调用一次的中间层、为「以后可能扩展」加的基类</li>
+        <li><b>结构断裂</b>：新增文件没接进路由、删了逻辑但常量文案没跟着删</li>
+        <li><b>分层破坏</b>：视图里写聚合 SQL、组件里直接拼 URL</li>
+        <li><b>交付一致性</b>：代码与开发文档不一致却没回写文档</li>
+      </ol>
+
+      <div class="tip danger">
+        <p>误报<strong>不许改代码去迎合，也不许删规则</strong>。正确做法是给规则加<code>allow_pattern</code>或<code>exclude_glob</code>，把「本项目中合法的写法」写进规则里。规则集是活的，越用越准。</p>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="files">
+      <h2>文件放哪、怎么命名</h2>
+      <p class="lead">一个需求一个目录，四份文档。文件名必须能一眼看出属于哪个需求，否则多个需求并行时标签页和搜索结果全是重名。</p>
+
+      <pre><code>docs/dev/task-search-filter/
+  task-search-filter.需求方案.md
+  task-search-filter.开发文档.md
+  task-search-filter.测试记录.md
+  task-search-filter.质量体检.md</code></pre>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>规则</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>格式</td><td><code>需求名.文档类型.md</code>，点分，四段类型固定</td></tr>
+            <tr><td>禁止</td><td><code>plan.md</code>、<code>design.md</code>、<code>test.md</code>、<code>review.md</code>、<code>doc.md</code>、<code>未命名.md</code></td></tr>
+            <tr><td>禁止</td><td>用序号凑数（<code>1.md</code>、<code>02.md</code>）</td></tr>
+            <tr><td>校验</td><td>体检会检查<code>docs/dev/</code>，不合规直接报 warning</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip info">
+        <p><b>为什么较真：</b>四个需求并行开发时，编辑器标签页、全文搜索、<code>git status</code>里全是<code>plan.md</code>，必然点错、改错。这一条是返工过才定下来的。</p>
+      </div>
+    </section>
+
+    <!-- 08 -->
+    <section id="usage">
+      <h2>两种用法</h2>
+      <p class="lead">交给助手，或者自己敲命令，两条路都通。助手做的每一步，你自己也能复现。</p>
+
+      <div class="paths">
+        <div class="path">
+          <div class="ph"><span>推荐</span>交给助手</div>
+          <p>直接说需求，助手按阶段推进，每阶段只汇报三件事：做了什么、关键决策、要你确认什么。</p>
+          <pre><code>帮我做一个任务搜索功能</code></pre>
+          <p style="margin-top:8px">需要打断时说「先别问，直接写」或「这里改成……」，门禁会尊重你的选择并留痕。</p>
+        </div>
+        <div class="path">
+          <div class="ph"><span class="plain">自己来</span>敲命令</div>
+          <p>四步走：建骨架、看阶段、跑测试、做体检。</p>
+          <pre><code>sop.py scaffold &lt;需求名&gt;
+sop.py status
+sop.py test
+sop.py audit --diff</code></pre>
+        </div>
+      </div>
+
+      <div class="tip warn">
+        <p><code>audit --diff</code>只扫本次改动，日常用这个；<code>audit</code>不带参数是全项目基线，适合季度体检。第一次在本项目跑全量可能会看到一批历史问题，那些不属于本次改动。</p>
+      </div>
+    </section>
+
+    <!-- 09 -->
+    <section id="faq">
+      <h2>常见问题</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>问题</th><th>怎么办</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>小改动也要走六步吗？</td>
+              <td>不用。改文案、调颜色、只读排查直接做。判据是：<b>会不会动接口、数据或权限</b>，不动就走简化路子</td>
+            </tr>
+            <tr>
+              <td>我不想看文档，只想赶紧写</td>
+              <td>说「先写，文档后补」。会跳关但留痕，写完必须倒补方案与开发文档，不许拿代码当文档</td>
+            </tr>
+            <tr>
+              <td>体检报了一堆 warning</td>
+              <td>先逐条看是不是真问题。是误报就改<code>audit_rules.json</code>加豁免，不要改业务代码去迎合规则</td>
+            </tr>
+            <tr>
+              <td>项目没有测试框架，还能补单测吗？</td>
+              <td>能。Python 用 Django <code>TestCase</code> 或<code>pytest</code>；前端没装 vitest 时，可把逻辑抽成纯函数用<code>node --test</code>零依赖跑</td>
+            </tr>
+            <tr>
+              <td>测试连不上 MySQL</td>
+              <td>加一份<code>config/settings_test.py</code>继承主配置、只把数据库换成内存 SQLite；<code>sop.py test</code>会自动带上它</td>
+            </tr>
+            <tr>
+              <td>文档名写错了</td>
+              <td>直接改名，别将就。<code>status</code>和<code>audit</code>都认<code>需求名.类型.md</code></td>
+            </tr>
+            <tr>
+              <td>需求做到一半要改方案</td>
+              <td>改需求方案文档，重新确认。已经写了的代码不用回退，但要同步改开发文档</td>
+            </tr>
+            <tr>
+              <td>体检结论写什么算合格</td>
+              <td>只有两种：<b>可提交</b>或<b>需返工（列明项）</b>。写「基本没问题」视为没做完</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="ref">
+      <h2>命令速查表</h2>
+      <p class="lead">脚本在<code>skills/spec-dev-sop/scripts/</code>，只依赖 Python 标准库，不用装任何东西。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>命令</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>sop.py status</code></td><td>看所有需求处在哪个阶段，含是否跳关</td></tr>
+            <tr><td><code>sop.py scaffold &lt;需求名&gt;</code></td><td>建<code>docs/dev/&lt;需求名&gt;/</code>四份文档</td></tr>
+            <tr><td><code>sop.py audit --diff</code></td><td>只体检本次改动（日常用）</td></tr>
+            <tr><td><code>sop.py audit</code></td><td>全项目基线体检</td></tr>
+            <tr><td><code>sop.py audit --only secrets</code></td><td>只查某一类，可选<code>secrets</code>/<code>debug</code>/<code>redundancy</code>/<code>structure</code>/<code>style</code></td></tr>
+            <tr><td><code>sop.py audit --json</code></td><td>机器可读输出，便于接 CI</td></tr>
+            <tr><td><code>sop.py audit --strict</code></td><td>warning 也算失败，退出码非零</td></tr>
+            <tr><td><code>sop.py test</code></td><td>自动探测并运行后端与前端测试</td></tr>
+            <tr><td><code>sop.py test --dry-run</code></td><td>只看会跑哪些命令，不执行</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>规则怎么迭代</h3>
+      <p>所有检查项都在<code>scripts/audit_rules.json</code>里，加规则不用改代码：</p>
+      <pre><code>{
+  "id": "my-rule",
+  "severity": "warning",
+  "langs": ["python"],
+  "skip_tests": true,
+  "pattern": "你的正则",
+  "allow_pattern": "压制误报的正则",
+  "message": "人话说明怎么修"
+}</code></pre>
+      <p>改完执行<code>python skills/sync_skills.py</code>同步，再重启会话让技能重新加载。</p>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <span>StudyBuddy · spec-dev-sop · 配套文档：SKILL.md、discovery-questions.md、testing-playbook.md、audit-playbook.md</span>
+  <span>浏览器直接打开本文件即可</span>
+</footer>
+
+</body>
+</html>
